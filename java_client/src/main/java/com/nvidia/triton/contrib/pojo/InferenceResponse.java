@@ -2,18 +2,21 @@ package com.nvidia.triton.contrib.pojo;
 
 import java.util.List;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * JSON object for
  * <a href="https://github.com/kubeflow/kfserving/blob/master/docs/predict-api/v2/rest_predict_v2.yaml#L320">inference_response</a>
  * object in kfserving's v2 rest schema.
  */
+@JsonInclude(Include.NON_NULL)
 public class InferenceResponse {
 
-    @JSONField(name = "model_name")
+    @JsonProperty("model_name")
     private String modelName;
-    @JSONField(name = "model_version")
+    @JsonProperty("model_version")
     private String modelVersion;
     private String id;
     private Parameters parameters;

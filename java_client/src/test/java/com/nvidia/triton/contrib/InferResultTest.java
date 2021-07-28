@@ -9,17 +9,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-
+import com.google.common.collect.Sets;
+import com.google.common.primitives.UnsignedInteger;
+import com.google.common.primitives.UnsignedLong;
 import com.nvidia.triton.contrib.InferResult.Index;
 import com.nvidia.triton.contrib.pojo.DataType;
 import com.nvidia.triton.contrib.pojo.IOTensor;
 import com.nvidia.triton.contrib.pojo.InferenceResponse;
 import com.nvidia.triton.contrib.pojo.Parameters;
-import com.google.common.collect.Sets;
-import com.google.common.primitives.UnsignedInteger;
-import com.google.common.primitives.UnsignedLong;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.message.BasicHttpResponse;
@@ -201,7 +198,7 @@ class InferResultTest {
         ex = assertThrows(InferenceException.class, () -> new InferResult(resp));
         assertEquals(ex.getMessage(), "Malformed error response: {");
 
-        entity.setContent(new ByteArrayInputStream("{error: \"hi\"}".getBytes(StandardCharsets.UTF_8)));
+        entity.setContent(new ByteArrayInputStream("{\"error\": \"hi\"}".getBytes(StandardCharsets.UTF_8)));
         resp.setEntity(entity);
         ex = assertThrows(InferenceException.class, () -> new InferResult(resp));
         assertEquals(ex.getMessage(), "hi");
@@ -213,13 +210,13 @@ class InferResultTest {
         t1.setName("t1");
         t1.setShape(new long[] {2, 2});
         t1.setDatatype(DataType.FP32);
-        t1.setData(new JSONArray(Arrays.asList(1.1F, 2.2F, 3.3F, 4.4F)));
+        t1.setData(new Object[]{1.1F, 2.2F, 3.3F, 4.4F});
 
         IOTensor t2 = new IOTensor();
         t2.setName("t2");
         t2.setShape(new long[] {2, 2});
         t2.setDatatype(DataType.INT32);
-        t2.setData(new JSONArray(Arrays.asList(1, 2, 3, 4)));
+        t2.setData(new Object[]{1, 2, 3, 4});
 
         InferenceResponse inferResp = new InferenceResponse();
         inferResp.setModelName("my_model");
@@ -231,7 +228,7 @@ class InferResultTest {
         BasicHttpResponse httpResp = new BasicHttpResponse(
             new BasicStatusLine(new ProtocolVersion("http", 1, 0), 200, ""));
         BasicHttpEntity entity = new BasicHttpEntity();
-        byte[] inferRespBytes = JSON.toJSONString(inferResp).getBytes(StandardCharsets.UTF_8);
+        byte[] inferRespBytes = Util.toJson(inferResp).getBytes(StandardCharsets.UTF_8);
         entity.setContent(new ByteArrayInputStream(inferRespBytes));
         httpResp.setEntity(entity);
 
@@ -277,7 +274,7 @@ class InferResultTest {
         BasicHttpEntity entity = new BasicHttpEntity();
         ByteBuffer buf = ByteBuffer.allocate(1024);
 
-        byte[] jsonBytes = JSON.toJSONString(inferResp).getBytes(StandardCharsets.UTF_8);
+        byte[] jsonBytes = Util.toJson(inferResp).getBytes(StandardCharsets.UTF_8);
         buf.put(jsonBytes);
         buf.put(bytes1);
         buf.put(bytes2);

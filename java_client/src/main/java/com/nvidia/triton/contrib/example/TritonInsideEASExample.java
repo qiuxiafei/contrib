@@ -37,14 +37,14 @@ public class TritonInsideEASExample {
         //   - 1111111111111111.ap-south-1.pai-eas.aliyuncs.com/api/predict/<eas_service_name>
         // or
         //   - 1111111111111111.vpc.ap-south-1.pai-eas.aliyuncs.com/api/predict/<eas_service_name>
-        FixedEndpoint endpoint = new FixedEndpoint("1271520832287160.ap-south-1.pai-eas.aliyuncs.com/api/predict/test_triton");
+        FixedEndpoint endpoint = new FixedEndpoint("xxxxxx.ap-south-1.pai-eas.aliyuncs.com/api/predict/test_triton");
         try (InferenceServerClient client = new InferenceServerClient(endpoint, 50000, 50000)) {
 
             InferArguments inferArg = new InferArguments("inception_graphdef",
                 Collections.singletonList(input),
                 Collections.singletonList(output))
                 // To send request to your service, set token of your EAS service's here.
-                .setHeader("Authorization", "MzY0NDAwZjBmMGNjOWZhMTE0ZTRkOWYzZjliZDIzMWE2MmU5NTA5MQ==");
+                .setHeader("Authorization", "<EAS Token>");
 
             InferResult result = client.infer(inferArg);
             for (String name : result.getOutputs()) {

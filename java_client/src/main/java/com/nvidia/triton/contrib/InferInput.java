@@ -2,12 +2,9 @@ package com.nvidia.triton.contrib;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-
-import com.alibaba.fastjson.JSONArray;
 
 import com.nvidia.triton.contrib.pojo.DataType;
 import com.nvidia.triton.contrib.pojo.IOTensor;
@@ -52,7 +49,7 @@ public class InferInput {
     /**
      * Tensor data of this input tensor if it's in JSON format.
      */
-    private JSONArray data;
+    private Object[] data;
 
     /**
      * Number of elements in this inference input.
@@ -92,15 +89,21 @@ public class InferInput {
 
     private <T> void setJSONDataImpl(List<T> data) {
         this.parameters.remove(Parameters.KEY_BINARY_DATA_SIZE);
-        this.data = new JSONArray(data.size());
-        this.data.addAll(data);
+        //this.data = new JSONArray(data.size());
+        //this.data.addAll(data);
+        this.data = data.toArray(new Object[0]);
     }
 
     private <T, U> void setJSONDataImpl(List<T> data, Function<T, U> mapper) {
         this.parameters.remove(Parameters.KEY_BINARY_DATA_SIZE);
-        this.data = new JSONArray(data.size());
+        //this.data = new JSONArray(data.size());
+        //for (T datum : data) {
+        //    this.data.add(mapper.apply(datum));
+        //}
+        this.data = new Object[data.size()];
+        int i = 0;
         for (T datum : data) {
-            this.data.add(mapper.apply(datum));
+            this.data[i++] = mapper.apply(datum);
         }
     }
 
@@ -264,8 +267,10 @@ public class InferInput {
             this.binaryData = BinaryProtocol.toBytes(this.dataType, data);
             this.updateBinaryDataSize();
         } else {
-            this.data = new JSONArray(data.length);
-            this.data.addAll(Arrays.asList(data));
+            //this.data = new JSONArray(data.length);
+            //this.data.addAll(Arrays.asList(data));
+            this.data = new Object[data.length];
+            System.arraycopy(data, 0, this.data, 0, data.length);
         }
     }
 
@@ -298,7 +303,7 @@ public class InferInput {
         return binaryData;
     }
 
-    JSONArray getJSONData() {
-        return data;
+    Object[] getJSONData() {
+        return this.data;
     }
 }

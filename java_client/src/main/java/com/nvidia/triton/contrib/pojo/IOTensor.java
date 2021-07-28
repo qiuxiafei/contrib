@@ -1,6 +1,7 @@
 package com.nvidia.triton.contrib.pojo;
 
-import com.alibaba.fastjson.JSONArray;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 /**
  * This class represent
@@ -9,12 +10,14 @@ import com.alibaba.fastjson.JSONArray;
  * <a href="https://github.com/kubeflow/kfserving/blob/master/docs/predict-api/v2/rest_predict_v2.yaml#L299">response_output</a>
  * in kfserving's v2 rest schema. The two objects share the same definitions.
  */
+
+@JsonInclude(Include.NON_NULL)
 public class IOTensor {
     private String name;
     private long[] shape;
     private DataType datatype;
     private Parameters parameters;
-    private JSONArray data;
+    private Object[] data;
 
     public IOTensor() {
     }
@@ -51,11 +54,11 @@ public class IOTensor {
         this.parameters = parameters;
     }
 
-    public JSONArray getData() {
+    public Object[] getData() {
         return data;
     }
 
-    public void setData(JSONArray data) {
+    public void setData(Object[] data) {
         this.data = data;
     }
 }

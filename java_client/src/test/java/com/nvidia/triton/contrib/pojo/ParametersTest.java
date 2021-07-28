@@ -1,18 +1,16 @@
 package com.nvidia.triton.contrib.pojo;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nvidia.triton.contrib.Util;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -32,31 +30,32 @@ public class ParametersTest {
     }
 
     @Test
-    public void testToJSONMap() {
+    public void testToJSONMap() throws Exception {
         Parameters p = createParameters();
 
-        String json = JSON.toJSONString(p);
-        JSONObject jsonObj = JSON.parseObject(json);
+        String json = Util.toJson(p);
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode jsonObj = mapper.readTree(json);
 
-        Object anInt = jsonObj.get("int");
-        assertTrue(anInt instanceof Integer);
-        assertEquals(anInt, 100);
+        assertTrue(jsonObj.get("int").isInt());
+        Object anInt = jsonObj.get("int").doubleValue();
+        assertEquals(anInt, 100.0);
 
-        Object aFloat = jsonObj.get("float");
-        assertTrue(aFloat instanceof BigDecimal);
-        assertEquals(((BigDecimal)aFloat).doubleValue(), 3.22, 0.00001);
+        assertTrue(jsonObj.get("float").isFloatingPointNumber());
+        double aFloat = jsonObj.get("float").asDouble();
+        assertEquals(aFloat, 3.22, 0.00001);
 
-        Object str = jsonObj.get("str");
-        assertTrue(str instanceof String);
+        assertTrue(jsonObj.get("str").isTextual());
+        Object str = jsonObj.get("str").asText();
         assertEquals(str, "abcd");
     }
 
     @Test
-    public void testToFromJSON() {
+    public void testToFromJSON() throws Exception {
         Parameters p1 = createParameters();
 
-        String json = JSON.toJSONString(p1);
-        Parameters p2 = JSON.parseObject(json, Parameters.class);
+        String json = Util.toJson(p1);
+        Parameters p2 = Util.fromJson(json, Parameters.class);
 
         assertEquals(p1.getInt("int"), p2.getInt("int"));
         assertEquals(p1.getFloat("float"), p2.getFloat("float"), 0.00001);

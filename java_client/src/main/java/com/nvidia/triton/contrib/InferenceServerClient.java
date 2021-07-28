@@ -17,8 +17,6 @@ import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import com.alibaba.fastjson.JSON;
-
 import com.nvidia.triton.contrib.endpoint.AbstractEndpoint;
 import com.nvidia.triton.contrib.endpoint.FixedEndpoint;
 import com.nvidia.triton.contrib.pojo.IOTensor;
@@ -269,7 +267,7 @@ public class InferenceServerClient implements AutoCloseable {
         // Create post body in binary format:
         //    <json body><optional_binary_tensor>...
         ByteArrayOutputStream bodyBytes = new ByteArrayOutputStream();
-        byte[] jsonBytes = JSON.toJSONString(inferReq).getBytes(StandardCharsets.UTF_8);
+        byte[] jsonBytes = Util.toJson(inferReq).getBytes(StandardCharsets.UTF_8);
         boolean hasBinaryInput = false;
         bodyBytes.write(jsonBytes);
         for (InferInput input : arg.inputs) {

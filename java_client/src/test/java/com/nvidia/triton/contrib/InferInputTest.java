@@ -3,13 +3,11 @@ package com.nvidia.triton.contrib;
 import java.lang.reflect.Method;
 import java.util.stream.Stream;
 
-import com.alibaba.fastjson.JSON;
-
-import com.nvidia.triton.contrib.pojo.DataType;
-import com.nvidia.triton.contrib.pojo.IOTensor;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLong;
+import com.nvidia.triton.contrib.pojo.DataType;
+import com.nvidia.triton.contrib.pojo.IOTensor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -88,7 +86,7 @@ public class InferInputTest {
 
         // Check data as expected after serialize to JSON.
         assertNull(input.getBinaryData());
-        String jsonStr = JSON.toJSONString(input.getJSONData());
+        String jsonStr = Util.toJson(input.getJSONData());
         assertEquals(expectedJSON, jsonStr);
 
         // Check IOTensor.

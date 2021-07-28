@@ -11,18 +11,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONException;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.nvidia.triton.contrib.pojo.DataType;
 import com.nvidia.triton.contrib.pojo.IOTensor;
 import com.nvidia.triton.contrib.pojo.InferenceResponse;
 import com.nvidia.triton.contrib.pojo.Parameters;
 import com.nvidia.triton.contrib.pojo.ResponseError;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -60,9 +57,9 @@ public class InferResult {
             if (bodyBytes.length > 0) {
                 String bodyJson = new String(bodyBytes, Charsets.UTF_8);
                 try {
-                    ResponseError err = JSON.parseObject(bodyJson, ResponseError.class);
-                    throw new InferenceException(err);
-                } catch (JSONException e) {
+                    ResponseError err = Util.fromJson(bodyJson, ResponseError.class);
+                    throw new InferenceException(err.getError());
+                } catch (JsonProcessingException e) {
                     throw new InferenceException("Malformed error response: " + bodyJson);
                 }
             } else {
@@ -80,7 +77,7 @@ public class InferResult {
             Preconditions.checkState(readLen == jsonLen,
                 "Expect content length: %d, but got %d.", jsonLen, readLen);
             String bodyJson = new String(bodyBytes, Charsets.UTF_8);
-            this.response = JSON.parseObject(bodyJson, InferenceResponse.class);
+            this.response = Util.fromJson(bodyJson, InferenceResponse.class);
 
             // Construct name to binary index mapping.
             int startPos = 0;
@@ -98,7 +95,7 @@ public class InferResult {
             Preconditions.checkState(this.binaryData.length == startPos);
         } else {
             String bodyJson = new String(IOUtils.toByteArray(stream), Charsets.UTF_8);
-            this.response = JSON.parseObject(bodyJson, InferenceResponse.class);
+            this.response = Util.fromJson(bodyJson, InferenceResponse.class);
             this.binaryData = null;
         }
     }
@@ -259,10 +256,10 @@ public class InferResult {
             }
             return array;
         } else { // Output in json format.
-            JSONArray data = out.getData();
-            Object array = Array.newInstance(clazz, data.size());
-            for (int i = 0; i < data.size(); i++) {
-                Array.set(array, i, data.getObject(i, clazz));
+            Object[] data = out.getData();
+            Object array = Array.newInstance(clazz, data.length);
+            for (int i = 0; i < data.length; i++) {
+                Array.set(array, i, Util.numericCast(data[i], clazz));
             }
             return array;
         }

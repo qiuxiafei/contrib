@@ -1,18 +1,20 @@
 package com.nvidia.triton.contrib.pojo;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.alibaba.fastjson.TypeReference;
-import com.alibaba.fastjson.annotation.JSONField;
-import com.alibaba.fastjson.parser.DefaultJSONParser;
-import com.alibaba.fastjson.parser.ParserConfig;
-import com.alibaba.fastjson.parser.deserializer.ObjectDeserializer;
-import com.alibaba.fastjson.serializer.JSONSerializer;
-import com.alibaba.fastjson.serializer.ObjectSerializer;
-import com.alibaba.fastjson.serializer.SerializeConfig;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.nvidia.triton.contrib.pojo.Parameters.ParamDeserializer;
+import com.nvidia.triton.contrib.pojo.Parameters.ParamSerializer;
 
 /**
  * This class represent
@@ -20,12 +22,9 @@ import com.alibaba.fastjson.serializer.SerializeConfig;
  * object in kfserving's v2 rest schema is just a JSON string, and offer some util methods.
  * When serializing/deserializing, Parameters should act just like a map.
  */
+@JsonSerialize(using = ParamSerializer.class)
+@JsonDeserialize(using = ParamDeserializer.class)
 public class Parameters {
-
-    static {
-        SerializeConfig.getGlobalInstance().put(Parameters.class, new ParamSerDeser());
-        ParserConfig.getGlobalInstance().putDeserializer(Parameters.class, new ParamSerDeser());
-    }
 
     public final static String KEY_BINARY_DATA_SIZE = "binary_data_size";
 
@@ -65,7 +64,6 @@ public class Parameters {
      *
      * @return true if empty.
      */
-    @JSONField(serialize = false)
     public boolean isEmpty() {
         return this.params.isEmpty();
     }
@@ -169,23 +167,25 @@ public class Parameters {
         }
     }
 
-    static class ParamSerDeser implements ObjectSerializer, ObjectDeserializer {
+    static class ParamSerializer extends JsonSerializer<Parameters> {
+
         @Override
-        public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features)
+        public void serialize(Parameters parameters, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
-            serializer.write(((Parameters)object).params);
-        }
-
-        @Override
-        public <T> T deserialze(DefaultJSONParser parser, Type type, Object fieldName) {
-            Type t = new TypeReference<Map<String, Object>>() {}.getType();
-            Map<String, Object> param = parser.parseObject(t);
-            return (T)new Parameters(param);
-        }
-
-        @Override
-        public int getFastMatchToken() {
-            return 0;
+            jsonGenerator.writeObject(parameters.params);
         }
     }
+
+    static class ParamDeserializer extends JsonDeserializer<Parameters> {
+
+        @Override
+        public Parameters deserialize(JsonParser p, DeserializationContext ctx)
+            throws IOException {
+            ObjectMapper mapper = new ObjectMapper();
+            final Map<String, Object> obj = mapper.readValue(p,
+                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+            return new Parameters(obj);
+        }
+    }
+
 }
